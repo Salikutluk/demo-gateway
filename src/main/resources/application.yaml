@@ -1,0 +1,48 @@
+server:
+  port: 8080
+---
+spring:
+  profiles:
+    - k8s
+  application:
+    name: demo-gateway
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuerUri: http://192.168.99.101/auth/realms/demo-app
+            userNameAttribute: preferred_username
+        registration:
+          keycloak:
+            clientId: demo-backend
+            clientSecret: 543266b6-38cc-40f2-a389-f2094b97bb20
+  cloud:
+    gateway:
+      default-filters:
+        - TokenRelay
+      routes:
+        - id: demo-user
+          uri: lb://demo-user
+          predicates:
+            - Path=/api/demo-user/**
+        - id: demo-address
+          uri: lb://demo-address
+          predicates:
+            - Path=/api/demo-address/**
+      discovery:
+        locator:
+          lower-case-service-id: true
+          enabled: true
+    kubernetes:
+      enabled: true
+      config:
+        name: demo-gateway
+        namespace: default
+logging:
+  level:
+    org:
+      springframework:
+        cloud.gateway: DEBUG
+        http.server.reactive: DEBUG
+        web.reactive: DEBUG
